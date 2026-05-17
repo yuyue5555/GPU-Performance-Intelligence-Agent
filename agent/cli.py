@@ -7,15 +7,13 @@ Usage:
     python -m agent.cli "Which GPU has best LLM performance under $2000?"
     python -m agent.cli --interactive
 """
-import sys
-
 from dotenv import load_dotenv
-load_dotenv()
-
 import typer
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
+
+load_dotenv()
 
 app = typer.Typer()
 console = Console()

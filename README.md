@@ -41,7 +41,7 @@ Deployed via GitLab CI → Docker → Kubernetes (perflab namespace)
 | Data Pipeline | Python ETL (pandas + SQLite) |
 | Containerization | Docker + docker-compose |
 | Orchestration | Kubernetes + Helm-ready manifests |
-| CI/CD | GitLab CI (lint → test → build → deploy) |
+| CI/CD | GitHub Actions (lint → test → build) |
 
 ## Project Structure
 
@@ -71,7 +71,10 @@ gpu-perf-agent/
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
-├── .gitlab-ci.yml        # CI/CD: lint → test → build → deploy
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # GitHub Actions: lint → test → build
+├── .gitlab-ci.yml        # GitLab CI reference: lint → test → build → deploy (K8s)
 ├── requirements.txt
 └── data/                 # SQLite DB + JSON outputs (git-ignored)
 ```
@@ -129,16 +132,19 @@ kubectl rollout status deployment/gpu-perflab-dashboard --namespace=perflab
 
 Access via `http://perflab.internal` (configure DNS or `/etc/hosts` for local clusters).
 
-## CI/CD Pipeline (GitLab)
+## CI/CD Pipeline
 
-`.gitlab-ci.yml` runs four stages on every merge request and main branch push:
+GitHub Actions runs automatically on every push to `main` and every pull request:
 
-| Stage | Jobs | What it does |
+| Stage | Job | What it does |
 |---|---|---|
-| **lint** | `ruff-lint`, `type-check` | Style and type checks |
-| **test** | `unit-tests`, `etl-smoke-test` | Pytest + coverage, ETL end-to-end |
-| **build** | `build-image` | Docker build + push to GitLab registry |
-| **deploy** | `deploy-staging` | `kubectl apply` + rolling restart |
+| **lint** | `ruff` | Code style checks |
+| **test** | `etl-smoke-test`, `pytest` | ETL end-to-end + unit tests with coverage |
+| **build** | `docker/build-push-action` | Docker image build (layer-cached via GitHub cache) |
+
+The pipeline status badge appears on every PR — green means lint + ETL + Docker build all passed.
+
+> `deploy` stage is defined in `.gitlab-ci.yml` as a reference design for GitLab-based Kubernetes rollouts (`kubectl apply` + rolling restart).
 
 ## MCP Tools
 

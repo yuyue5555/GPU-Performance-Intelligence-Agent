@@ -4,12 +4,10 @@ ETL pipeline: Extract → Transform → Load benchmark data.
 Run this first to populate the database.
 """
 import json
-import sqlite3
-from pathlib import Path
 
 import pandas as pd
 
-from pipeline.generator import generate_benchmark_records, seed_database, DB_PATH, DATA_DIR
+from pipeline.generator import generate_benchmark_records, seed_database, DATA_DIR
 
 METRICS = [
     "llm_inference_tokens_per_sec",

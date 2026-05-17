@@ -417,7 +417,7 @@ elif page == "🤖 AI Agent":
                         reply = resp.json()["response"]
                     else:
                         reply = f"API error: {resp.status_code}"
-                except Exception as e:
+                except Exception:
                     # Fallback: call agent directly
                     try:
                         from agent.graph import run_agent
