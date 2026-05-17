@@ -1,0 +1,102 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE/gpu-perflab
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  PYTHON_VERSION: "3.11"
+
+# ─── Lint ─────────────────────────────────────────────────────────────────────
+
+ruff-lint:
+  stage: lint
+  image: python:$PYTHON_VERSION-slim
+  before_script:
+    - pip install ruff --quiet
+  script:
+    - ruff check .
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+type-check:
+  stage: lint
+  image: python:$PYTHON_VERSION-slim
+  before_script:
+    - pip install pyright --quiet
+    - pip install -r requirements.txt --quiet
+  script:
+    - pyright pipeline/ agent/ mcp_tools/ api/
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ─── Test ─────────────────────────────────────────────────────────────────────
+
+unit-tests:
+  stage: test
+  image: python:$PYTHON_VERSION-slim
+  before_script:
+    - pip install -r requirements.txt --quiet
+    - pip install pytest pytest-cov --quiet
+  script:
+    - python -m pipeline.etl
+    - pytest tests/ -v --cov=. --cov-report=term-missing
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+etl-smoke-test:
+  stage: test
+  image: python:$PYTHON_VERSION-slim
+  before_script:
+    - pip install -r requirements.txt --quiet
+  script:
+    - python -m pipeline.etl
+    - python -c "import sqlite3; conn = sqlite3.connect('data/benchmarks.db'); count = conn.execute('SELECT COUNT(*) FROM benchmarks').fetchone()[0]; print(f'Records in DB: {count}'); assert count > 0, 'ETL produced no records'"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ─── Build ────────────────────────────────────────────────────────────────────
+
+build-image:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -f docker/Dockerfile -t $IMAGE_NAME:$IMAGE_TAG -t $IMAGE_NAME:latest .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+    - docker push $IMAGE_NAME:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ─── Deploy ───────────────────────────────────────────────────────────────────
+
+deploy-staging:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  environment:
+    name: staging
+    url: http://perflab-staging.internal
+  before_script:
+    - kubectl config use-context $KUBE_CONTEXT_STAGING
+  script:
+    - kubectl apply -f k8s/ --namespace=perflab
+    - kubectl set image deployment/gpu-perflab-api api=$IMAGE_NAME:$IMAGE_TAG --namespace=perflab
+    - kubectl set image deployment/gpu-perflab-dashboard dashboard=$IMAGE_NAME:$IMAGE_TAG --namespace=perflab
+    - kubectl rollout status deployment/gpu-perflab-api --namespace=perflab --timeout=120s
+    - kubectl rollout status deployment/gpu-perflab-dashboard --namespace=perflab --timeout=120s
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

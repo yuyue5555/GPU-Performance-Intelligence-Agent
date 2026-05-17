@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-perflab-api
+  namespace: perflab
+  labels:
+    app: gpu-perflab
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gpu-perflab
+      component: api
+  template:
+    metadata:
+      labels:
+        app: gpu-perflab
+        component: api
+    spec:
+      initContainers:
+        # Seed the database before the API starts
+        - name: etl-init
+          image: gpu-perflab:latest
+          command: ["python", "-m", "pipeline.etl"]
+          envFrom:
+            - configMapRef:
+                name: gpu-perflab-config
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      containers:
+        - name: api
+          image: gpu-perflab:latest
+          command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: gpu-perflab-config
+            - secretRef:
+                name: gpu-perflab-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gpu-perflab-data

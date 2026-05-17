@@ -1,0 +1,28 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Data (generated, not source)
+data/
+
+# Kubernetes secrets (never commit real values)
+k8s/secret.yaml
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/settings.json
+.idea/

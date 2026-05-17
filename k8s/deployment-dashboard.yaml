@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpu-perflab-dashboard
+  namespace: perflab
+  labels:
+    app: gpu-perflab
+    component: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpu-perflab
+      component: dashboard
+  template:
+    metadata:
+      labels:
+        app: gpu-perflab
+        component: dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: gpu-perflab:latest
+          command:
+            - streamlit
+            - run
+            - dashboard/app.py
+            - --server.port=8501
+            - --server.address=0.0.0.0
+            - --server.headless=true
+          ports:
+            - containerPort: 8501
+          envFrom:
+            - configMapRef:
+                name: gpu-perflab-config
+            - secretRef:
+                name: gpu-perflab-secrets
+          env:
+            - name: API_BASE_URL
+              value: "http://gpu-perflab-api:8000"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gpu-perflab-data

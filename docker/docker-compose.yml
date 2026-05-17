@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  # ETL pipeline (runs once, seeds the database)
+  etl:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: python -m pipeline.etl
+    volumes:
+      - gpu_data:/app/data
+    environment:
+      - PYTHONPATH=/app
+
+  # FastAPI backend
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - gpu_data:/app/data
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PYTHONPATH=/app
+    depends_on:
+      - etl
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streamlit dashboard
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - gpu_data:/app/data
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PYTHONPATH=/app
+    depends_on:
+      - api
+
+volumes:
+  gpu_data:
