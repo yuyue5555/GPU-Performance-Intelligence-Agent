@@ -148,6 +148,7 @@ Access via `http://perflab.internal` (configure DNS or `/etc/hosts` for local cl
 | `compare_gpus` | Side-by-side comparison on any metric |
 | `detect_regressions` | Scan for >10% performance drops vs rolling baseline |
 | `generate_report` | Structured Markdown report (overview / efficiency / consumer) |
+| `query_time_series` | Trend data for a specific GPU over a configurable time window, with min/max/avg and trend direction (improving / stable / declining) |
 
 ## Dashboard Pages
 

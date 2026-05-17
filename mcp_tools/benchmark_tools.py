@@ -209,6 +209,66 @@ def generate_report(focus: str = "overview") -> str:
     return "\n".join(lines)
 
 
+# ─── Tool 5: Query Time Series ────────────────────────────────────────────────
+
+@tool
+def query_time_series(
+    gpu_name: str,
+    metric: str = "llm_inference_tokens_per_sec",
+    days: int = 30,
+) -> str:
+    """
+    Query benchmark trend data for a specific GPU over a recent time window.
+
+    Args:
+        gpu_name: GPU name to query (e.g. 'RTX 4090', 'H100')
+        metric: Metric to trend — one of 'llm_inference_tokens_per_sec',
+                'cnn_training_images_per_sec', 'render_fps_4k',
+                'memory_bandwidth_gbps'
+        days: Number of recent days to include (default 30)
+
+    Returns:
+        JSON with ordered time series data points, plus summary statistics
+        (min, max, average, trend direction).
+    """
+    rows = _query_db(
+        f"""
+        SELECT run_date, driver_version, {metric}, regression_flag
+        FROM benchmarks
+        WHERE gpu_name LIKE ?
+          AND {metric} IS NOT NULL
+          AND run_date >= datetime('now', ? || ' days')
+        ORDER BY run_date ASC
+        """,
+        (f"%{gpu_name}%", f"-{days}"),
+    )
+
+    if not rows:
+        return json.dumps({
+            "error": f"No data found for '{gpu_name}' in the last {days} days.",
+            "tip": "Try a longer window (days=60 or days=90) or check the GPU name.",
+        })
+
+    values = [r[metric] for r in rows if r[metric] is not None]
+    first, last = values[0], values[-1]
+    trend = "improving" if last > first * 1.02 else "declining" if last < first * 0.98 else "stable"
+
+    return json.dumps({
+        "gpu_name": gpu_name,
+        "metric": metric,
+        "unit": _metric_unit(metric),
+        "days": days,
+        "data_points": rows,
+        "summary": {
+            "min": round(min(values), 2),
+            "max": round(max(values), 2),
+            "avg": round(sum(values) / len(values), 2),
+            "latest": round(last, 2),
+            "trend": trend,
+        },
+    }, indent=2)
+
+
 # ─── Helper ───────────────────────────────────────────────────────────────────
 
 def _metric_unit(metric: str) -> str:
@@ -225,4 +285,4 @@ def _metric_unit(metric: str) -> str:
 
 # ─── Tool registry (MCP-style) ────────────────────────────────────────────────
 
-ALL_TOOLS = [query_benchmarks, compare_gpus, detect_regressions, generate_report]
+ALL_TOOLS = [query_benchmarks, compare_gpus, detect_regressions, generate_report, query_time_series]
