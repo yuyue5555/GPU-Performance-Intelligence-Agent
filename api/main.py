@@ -12,14 +12,14 @@ Endpoints:
 """
 import json
 from pathlib import Path
-
-from dotenv import load_dotenv
-load_dotenv()
 from typing import Optional
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+load_dotenv()
 
 SUMMARY_PATH = Path(__file__).parent.parent / "data" / "summary.json"
 SNAPSHOT_PATH = Path(__file__).parent.parent / "data" / "latest_snapshot.json"
