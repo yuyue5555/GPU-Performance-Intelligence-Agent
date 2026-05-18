@@ -81,6 +81,7 @@ st.markdown("""
         --font-md: 1rem;
         --font-lg: 1.25rem;
         --font-xl: 1.625rem;
+        --header-offset: 2.75rem;
     }
 
     .stApp, .main {
@@ -104,10 +105,11 @@ st.markdown("""
     .sidebar-brand {
         font-family: 'JetBrains Mono', monospace;
         color: var(--nv-green-bright);
-        font-size: var(--font-lg);
+        font-size: 1.375rem;
         font-weight: 700;
         letter-spacing: -0.01em;
-        line-height: 1.3;
+        line-height: 1.35;
+        margin-bottom: 0.35rem;
     }
     .page-subtitle {
         color: var(--text-secondary);
@@ -168,20 +170,48 @@ st.markdown("""
     div[data-testid="stSidebarContent"] {
         background: var(--bg-sidebar);
         border-right: 1px solid var(--border-subtle);
-        padding-top: var(--space-md);
+        padding-top: calc(var(--header-offset) + 1.25rem);
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        padding-bottom: 1.25rem;
+    }
+    [data-testid="stSidebar"] .section-label {
+        font-size: 0.875rem;
+        letter-spacing: 0.07em;
+        margin-top: 0.15rem;
+    }
+    [data-testid="stSidebar"] .page-subtitle {
+        font-size: 1.0625rem !important;
+        line-height: 1.55 !important;
+        margin-bottom: 0.75rem !important;
     }
     [data-testid="stSidebar"] .stMarkdown p,
     [data-testid="stSidebar"] .stMarkdown label {
         color: var(--text-secondary) !important;
-        font-size: var(--font-sm);
+        font-size: 0.9375rem !important;
+        line-height: 1.55;
     }
     [data-testid="stSidebar"] .stMarkdown strong {
         color: var(--text-primary) !important;
-        font-size: var(--font-sm);
+        font-size: 0.9375rem !important;
     }
     [data-testid="stSidebar"] hr {
         border-color: var(--border-subtle);
-        margin: var(--space-md) 0;
+        margin: 1.15rem 0;
+    }
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div {
+        row-gap: 0.45rem;
+        gap: 0.45rem;
+    }
+    [data-testid="stSidebar"] [data-testid="stSelectbox"] label,
+    [data-testid="stSidebar"] [data-testid="stRadio"] label,
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] label {
+        font-size: 0.9375rem !important;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        font-size: 0.875rem !important;
+        padding: 0.55rem 0.95rem !important;
+        min-height: 2.65rem !important;
     }
 
     /* Metrics — card-like modules with balanced scale */
@@ -243,7 +273,10 @@ st.markdown("""
         border: 1px solid #b8c0cc !important;
         border-radius: 8px !important;
     }
-    [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+    [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+        color: #121418 !important;
+        font-size: 0.875rem !important;
+    }
     section.main [data-testid="stSelectbox"] [data-baseweb="select"] > div,
     main[data-testid="stMain"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {
         color: #121418 !important;
@@ -284,8 +317,12 @@ st.markdown("""
 
     /* Radio navigation */
     [data-testid="stSidebar"] [data-testid="stRadio"] label p {
-        font-size: var(--font-sm) !important;
+        font-size: 0.9375rem !important;
+        line-height: 1.45 !important;
         color: var(--text-secondary) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {
+        padding: 0.35rem 0 !important;
     }
     [data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"] p {
         color: var(--nv-green-bright) !important;
@@ -461,12 +498,21 @@ st.markdown("""
         margin-bottom: var(--space-md);
     }
 
-    /* Hide Streamlit chrome for cleaner layout */
-    #MainMenu, footer, header[data-testid="stHeader"] {
+    /* Hide Streamlit chrome — keep header visible so sidebar toggle remains usable */
+    #MainMenu, footer {
         visibility: hidden;
     }
+    header[data-testid="stHeader"] {
+        background-color: var(--bg-base) !important;
+        border-bottom: 1px solid var(--border-subtle);
+        z-index: 1002;
+    }
+    /* Fixed header overlaps scroll area — reserve top space */
+    section.main .block-container,
+    [data-testid="stMain"] .block-container {
+        padding-top: calc(var(--header-offset) + 1.25rem) !important;
+    }
     .block-container {
-        padding-top: 1.25rem;
         padding-bottom: 2rem;
         max-width: 1400px;
     }
@@ -555,7 +601,8 @@ def load_time_series() -> pd.DataFrame:
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown('<div class="sidebar-brand">⚡ PerfLab</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-brand">⚡ GPU Performance Intelligence Agent
+</div>', unsafe_allow_html=True)
     st.markdown('<p class="page-subtitle" style="margin-bottom:0.5rem">GPU Intelligence Dashboard</p>', unsafe_allow_html=True)
     st.markdown("---")
 
