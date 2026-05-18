@@ -354,10 +354,10 @@ elif page == "⚔️ GPU Compare":
         st.markdown("---")
         st.markdown("### Specifications")
         specs_df = pd.DataFrame([
-            {"Spec": "VRAM (GB)", gpu_a: row_a.get("vram_gb"), gpu_b: row_b.get("vram_gb")},
-            {"Spec": "TDP (W)", gpu_a: row_a.get("tdp_w"), gpu_b: row_b.get("tdp_w")},
+            {"Spec": "VRAM (GB)", gpu_a: str(row_a.get("vram_gb", "N/A")), gpu_b: str(row_b.get("vram_gb", "N/A"))},
+            {"Spec": "TDP (W)", gpu_a: str(row_a.get("tdp_w", "N/A")), gpu_b: str(row_b.get("tdp_w", "N/A"))},
             {"Spec": "MSRP (USD)", gpu_a: f"${row_a.get('msrp_usd', 0):,}", gpu_b: f"${row_b.get('msrp_usd', 0):,}"},
-            {"Spec": "Tier", gpu_a: row_a.get("tier"), gpu_b: row_b.get("tier")},
+            {"Spec": "Tier", gpu_a: str(row_a.get("tier", "N/A")), gpu_b: str(row_b.get("tier", "N/A"))},
         ])
         st.dataframe(specs_df, use_container_width=True, hide_index=True)
 

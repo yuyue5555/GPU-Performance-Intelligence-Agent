@@ -83,7 +83,7 @@ gpu-perf-agent/
 
 ```bash
 # 1. Clone and create virtual environment
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -92,12 +92,12 @@ pip install -r requirements.txt
 echo "ANTHROPIC_API_KEY=sk-ant-your-key-here" > .env
 
 # 4. Seed the database (run once)
-python -m pipeline.etl
+python3 -m pipeline.etl
 
 # 5. Start services (three terminals)
 uvicorn api.main:app --reload --port 8000   # API  → http://localhost:8000/docs
 streamlit run dashboard/app.py              # UI   → http://localhost:8501
-python -m agent.cli --interactive           # CLI  → chat in terminal
+python3 -m agent.cli --interactive           # CLI  → chat in terminal
 ```
 
 ## Docker Compose
