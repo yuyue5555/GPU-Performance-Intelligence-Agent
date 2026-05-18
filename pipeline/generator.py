@@ -97,8 +97,9 @@ def seed_database(records: list[dict]) -> None:
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
+    cur.execute("DROP TABLE IF EXISTS benchmarks")
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS benchmarks (
+        CREATE TABLE benchmarks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             gpu_name TEXT,
             tier TEXT,
@@ -110,18 +111,17 @@ def seed_database(records: list[dict]) -> None:
             llm_inference_tokens_per_sec REAL,
             cnn_training_images_per_sec REAL,
             render_fps_4k REAL,
-            memory_bandwidth_gbps REAL
+            memory_bandwidth_gbps REAL,
+            regression_flag INTEGER DEFAULT 0
         )
     """)
-    cur.execute("DELETE FROM benchmarks")  # fresh seed
-
     for r in records:
         cur.execute("""
             INSERT INTO benchmarks (
                 gpu_name, tier, vram_gb, tdp_w, msrp_usd, run_date, driver_version,
                 llm_inference_tokens_per_sec, cnn_training_images_per_sec,
-                render_fps_4k, memory_bandwidth_gbps
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                render_fps_4k, memory_bandwidth_gbps, regression_flag
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             r["gpu_name"], r["tier"], r["vram_gb"], r["tdp_w"], r["msrp_usd"],
             r["run_date"], r["driver_version"],
@@ -129,6 +129,7 @@ def seed_database(records: list[dict]) -> None:
             r.get("cnn_training_images_per_sec"),
             r.get("render_fps_4k"),
             r.get("memory_bandwidth_gbps"),
+            int(r.get("regression_flag", False)),
         ))
 
     conn.commit()
