@@ -1,22 +1,22 @@
 # GPU Performance Intelligence Agent
 
-A full-stack AI agent platform that automates GPU benchmark collection, analysis, and visualization — built to demonstrate skills relevant to NVIDIA's PerfLab team.
+A full-stack AI agent platform that automates GPU benchmark collection, analysis, and visualization.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Streamlit Dashboard                   │
-│              (Interactive Benchmark Insights)            │
+│                    Streamlit Dashboard                  │
+│              (Interactive Benchmark Insights)           │
 └──────────────────────┬──────────────────────────────────┘
                        │ REST API
 ┌──────────────────────▼──────────────────────────────────┐
-│                   FastAPI Backend                        │
-│         /benchmarks  /analyze  /agent/chat               │
+│                   FastAPI Backend                       │
+│         /benchmarks  /analyze  /agent/chat              │
 └────────┬─────────────────────────┬──────────────────────┘
          │                         │
 ┌────────▼────────┐    ┌───────────▼──────────────────────┐
-│  Data Pipeline  │    │       LangGraph AI Agent          │
+│  Data Pipeline  │    │       LangGraph AI Agent         │
 │  (ETL: collect  │    │  ┌─────────────────────────────┐ │
 │   transform     │    │  │  MCP Tools:                 │ │
 │   store)        │    │  │  - query_benchmarks         │ │
