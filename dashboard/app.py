@@ -601,8 +601,10 @@ def load_time_series() -> pd.DataFrame:
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown('<div class="sidebar-brand">⚡ GPU Performance Intelligence Agent
-</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sidebar-brand">⚡ GPU Performance Intelligence Agent</div>',
+        unsafe_allow_html=True,
+    )
     st.markdown('<p class="page-subtitle" style="margin-bottom:0.5rem">GPU Intelligence Dashboard</p>', unsafe_allow_html=True)
     st.markdown("---")
 
